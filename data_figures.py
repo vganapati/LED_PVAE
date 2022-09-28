@@ -11,6 +11,7 @@ Creates figures of LED patterns and corresponding images for single and multiple
 import numpy as np
 import matplotlib.pyplot as plt
 from SyntheticMNIST_functions import create_folder
+from visualizer_functions import make_cutout_fig
 import imageio
 import sys
 
@@ -21,10 +22,16 @@ object_path = 'training/example_000000'
 mult_object_inds = [0,1,2,3,4,5,6,7]
 
 multiplex_description = '_Dirichlet'
-start_x_corner = 768
-start_y_corner = 768
-image_x = 512
-image_y = 512
+start_x_corner = 64 #768
+start_y_corner = 64 #768
+image_x = 2048-64*2 #512
+image_y = 2048-64*2 #512
+
+start_x_corner_inner = 480
+start_y_corner_inner = 480
+image_x_inner = 512
+image_y_inner = 512
+
 mult_ind = 0
 slice_ind=0
 cmap = 'gray' # 'gray'
@@ -46,6 +53,7 @@ create_folder(save_folder)
 im_stack = np.load(dataset_path + '/' + object_path + '/im_stack.npy')
 
 
+'''
 # Plot reconstruction
 
 def plot_recon(reconstruction_patch,save_folder,tag,slice_ind):
@@ -73,17 +81,18 @@ np.save('iter_reconstruction_patch.npy',reconstruction_patch)
 
 
 # Reconstruction from neural network
-nn_reconstruction = np.load(neural_net_save_path + '/full_field_restore_None.npy')[slice_ind]
+nn_reconstruction = np.load(neural_net_save_path + '/full_field_example_0.npy')[slice_ind,start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
 # nn_reconstruction = np.load(save_path + '/full_field_example_' + str(example_num) + '.npy')[slice_ind]
-reconstruction_patch = nn_reconstruction[start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
+# reconstruction_patch = nn_reconstruction[start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
 tag='neural_net'
-plot_recon(reconstruction_patch,save_folder,tag,slice_ind)
+plot_recon(nn_reconstruction,save_folder,tag,slice_ind)
 
 np.save('nn_reconstruction_patch.npy',reconstruction_patch)
 
 
-# XXX choose the phase reference to make them as close as possible
 
+# XXX choose the phase reference to make them as close as possible
+'''
 
 # function to make figures for each alpha and im_patch of interest
 def make_figs(im_patch, alpha, vmax, tag, save_folder,ind):
@@ -93,14 +102,23 @@ def make_figs(im_patch, alpha, vmax, tag, save_folder,ind):
     plt.axis('off')
     plt.savefig(save_folder + '/' + tag + '_patch_im_' + str(ind), dpi=300, bbox_inches='tight', pad_inches=0)
 
+    img = im_patch
+    start_corner = np.array([start_x_corner_inner,start_y_corner_inner])
+    size = np.array([image_x_inner,image_y_inner])
+    make_cutout_fig(img, start_corner, 
+                    size, 0, vmax, save_folder, tag + '_patch_im_' + str(ind))
+
     plt.figure()
     plt.scatter(led_position_xy[:,0], led_position_xy[:,1],c=alpha, s=100, cmap='Greens', edgecolors= "black", 
-                vmin=np.min(alpha), vmax=1.5)
+                vmin=np.min(alpha), vmax=1)
     plt.xlim((-50, 50))
     plt.ylim((-50, 50))
     plt.axis('square')
     plt.axis('off')
     plt.savefig(save_folder + '/' + tag + '_alpha_im_' + str(ind), dpi=300, bbox_inches='tight', pad_inches=0)
+    
+    
+    
 
 # Iterate through single images and create corresponding illumination pattern
 
@@ -115,7 +133,6 @@ for ind,im in enumerate(im_stack):
     
     tag = 'single_led'
     make_figs(im_patch, alpha, vmax, tag, save_folder, ind)
-
 
 
 # Multiplexed patterns
