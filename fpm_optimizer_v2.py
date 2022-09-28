@@ -235,7 +235,6 @@ if multiplexed:
                      folder_name,
                      save_tag,
                      bit_depth=16,
-                     real_mult=real_mult,
                      dtype=tf.float64,
                      multiplexed_description=multiplexed_description)   
 
@@ -652,12 +651,7 @@ print('mse_loss is: ' + str(mse_loss))
 if save_recons:
     subfolder_name = folder_name + '/reconstruction' + args.save_tag_recons
     create_folder(subfolder_name)
-    
-    if projected_grad:
-        reg_type = 'l1'
-    else:
-        reg_type = 'l2'
-    
+
     
     save_name = 'x_corner_' + str(x_corner) + '_y_corner_' + str(y_corner)
     

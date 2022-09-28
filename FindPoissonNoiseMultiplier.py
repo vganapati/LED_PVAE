@@ -17,7 +17,7 @@ import sys
 Nx = 2048
 Ny = 2048
 input_folder_name = "/Users/vganapa1/Dropbox/Github/E90_Yolanda_Andrew_FPM/030322/Noise"
-# exposure = 50 # ms
+exposure = 50 # ms
 remove_img = [13] # remove these images due to some problem in imaging
 bit_depth = 16
 
@@ -35,7 +35,7 @@ for i in range(num_images):
     print(filenames[i])
     if filenames[i] not in remove_filenames:
         img = imageio.imread(filenames[i])
-        all_imgs[:,:,i] = img/(2**bit_depth - 1)
+        all_imgs[:,:,i] = img/(2**bit_depth - 1)/exposure
    
 # plot the histogram for a random pixel
 
@@ -73,7 +73,7 @@ print(results.summary())
 plt.figure()
 plt.scatter(X[:,1],Y,s=0.1)
 
-X_plot = np.arange(0,1,1/100)
+X_plot = np.linspace(0,np.max(mean),1000)
 X_plot = sm.add_constant(X_plot)
 plt.plot(X_plot[:,1], np.sum(X_plot*np.expand_dims(results.params,axis=0),axis=1),'r', linewidth=1)
 
@@ -86,6 +86,6 @@ plt.savefig('poisson_noise.png',bbox_inches='tight', dpi = 300)
 
 # fit is aX+b
 
-print('fit is a*X+b')
+print('fit is a + b*X')
 print('a is: ', results.params[0])
 print('b is: ', results.params[1])
