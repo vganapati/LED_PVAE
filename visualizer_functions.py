@@ -141,6 +141,7 @@ def show_figs_pixel_map(save_path,
 def show_figs2(save_path, 
                iter_vec,
                train_loss_vec,
+               save_tag = 'train_loss_vec'
                ):
     
     # train_loss_vec = np.array(train_loss_vec)[:,-1]
@@ -149,9 +150,9 @@ def show_figs2(save_path,
     if plt_flag:
         
         plt.figure()
-        plt.title('Training loss')
+        plt.title(save_tag)
         plt.plot(train_loss_vec)
-        plt.savefig(save_path + '/train_loss_vec.png')
+        plt.savefig(save_path + '/' + save_tag + '.png')
     
 
 
@@ -215,10 +216,11 @@ def show_alpha_scatter(led_position_xy, alpha, im_stack_multiplexed):
     plt.axis('square')
     # plt.axis('off')
 
-    plt.figure()
-    plt.title('im_stack_multiplexed')
-    plt.imshow(im_stack_multiplexed)
-    plt.colorbar()
+    if im_stack_multiplexed is not None:
+        plt.figure()
+        plt.title('im_stack_multiplexed')
+        plt.imshow(im_stack_multiplexed)
+        plt.colorbar()
 
 def show_figs_alpha(save_path, 
                     alpha_sample,
@@ -353,3 +355,34 @@ def show_figs(save_path,
             plt.colorbar()
             plt.savefig(save_path + '/guess_var_' + \
                         data_folder + '_example_' + str(example_num) + '_iter_' + str(iter_ind) + '_LED_' + str(img_ind) + '.png')    
+
+
+def make_cutout_fig(img, start_corner, size, vmin, vmax, folder_name, save_name, \
+                    title = '', linewidth = 6, linewidth_zoom = 6, cmap='gray'):
+    # Create box
+    box = np.zeros(img.shape)
+    box[start_corner[0]:start_corner[0]+size[0],start_corner[1]:start_corner[1]+size[1]] = 1
+    start_corner2 = start_corner + linewidth
+    size2 = size - linewidth*2
+    box[start_corner2[0]:start_corner2[0]+size2[0],start_corner2[1]:start_corner2[1]+size2[1]] = 0
+    
+    plt.figure()
+    # plt.title(title)
+    plt.imshow(img, vmin=vmin, vmax=vmax, cmap=cmap)
+    plt.axis('off') 
+    plt.imshow(np.dstack([box, 1-box, 1-box, box]))    
+    plt.savefig(folder_name+'/'+save_name+'_full.png',bbox_inches='tight', dpi = 300, pad_inches=0) 
+
+
+    box2 = np.ones(size)
+    box2[linewidth_zoom:size[0]-linewidth_zoom,linewidth_zoom:size[1]-linewidth_zoom] = 0
+    img_zoomed = img[start_corner[0]:start_corner[0]+size[0],start_corner[1]:start_corner[1]+size[1]]
+    plt.figure()
+    # plt.title(title)  
+    plt.imshow(img_zoomed, \
+               vmin=vmin, vmax=vmax, cmap=cmap)
+    plt.axis('off')
+    plt.imshow(np.dstack([box2, 1-box2, 1-box2, box2]))   
+    plt.savefig(folder_name+'/'+save_name+'_zoom.png',bbox_inches='tight', dpi = 300, pad_inches=0) 
+    
+    return box2,img_zoomed
