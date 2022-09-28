@@ -28,6 +28,11 @@ parser.add_argument('-p', type=int,
                     help='num_patterns when reconstructing with multiplexed', 
                     default = 1)
 
+parser.add_argument('-b', type=int, 
+                    action='store', dest='batch_size',
+                    help='batch_size for reconstruction with all single LEDs', 
+                    default = 85)
+
 parser.add_argument('--alr', type=float, action='store', dest='adam_learning_rate', 
                         help='learning rate for adam optimizer', default = 1e-2)
     
@@ -101,6 +106,7 @@ num_slices = args.num_slices
 reg = np.finfo(np.float32).eps.item()
 save_tag_recons = args.save_tag_recons
 num_patterns = args.num_patterns # for multiplexed
+batch_size = args.batch_size # for single LED stack
 adam_learning_rate = args.adam_learning_rate
 
 
@@ -137,7 +143,7 @@ if use_mult:
 else:
     # All LEDs, full stack iterative
     base_command = 'python fpm_optimizer_v2.py --input_path ' + input_path + ' --obj_ind ' + str(obj_ind) + \
-                    ' -i ' + str(num_iter) + ' -b 85 ' + \
+                    ' -i ' + str(num_iter) + ' -b ' + str(batch_size) + ' ' + \
                     '--real_data --alr ' + str(adam_learning_rate) + ' --uf ' + str(upsample_factor) + \
                     ' --num_slices ' + str(num_slices) +' --slice_spacing 0 --ones --xcrop ' \
                     + str(x_size) + ' --ycrop ' + str(y_size) + ' --window --save_tag_recons ' + save_tag_recons
