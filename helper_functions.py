@@ -12,6 +12,8 @@ from scipy import signal
 import tensorflow as tf
 from tensorflow.keras import layers
 from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import mean_squared_error
+from skimage.metrics import peak_signal_noise_ratio
 from scipy.optimize import minimize
 import tensorflow_probability as tfp
 tfd = tfp.distributions
@@ -490,6 +492,31 @@ def psnr_complex(recon0,recon1):
     psnr = 10*np.log10(np.abs(delta)**2/mse)
     return(psnr,mse)
 
+def compare_low_res(recon0, recon1):
+
+    mse_recon = mean_squared_error(recon0, recon1)
+    # np.mean((recon0-recon1)**2)
+    
+    small_side = np.min(recon0.shape)
+    if small_side<7:
+        if small_side%2: # if odd
+            win_size=small_side
+        else:
+            win_size=small_side-1
+    else:
+        win_size=None
+
+    ssim_recon = ssim(recon0, recon1,
+                      data_range=recon0.max() - recon0.min(), win_size=win_size)
+    
+    
+    psnr_recon = peak_signal_noise_ratio(recon0, recon1,
+                      data_range=recon0.max() - recon0.min())
+    
+    err_string = 'MSE: {:.8f}, SSIM: {:.3f}, PSNR: {:.3f}'
+    print(err_string.format(mse_recon, ssim_recon, psnr_recon))
+    return(mse_recon, ssim_recon, psnr_recon)
+
 def compare(recon0, recon1):
 
     '''
@@ -526,6 +553,7 @@ def find_angle_offset(ground_truth, compare_obj):
     find the best angle offset
     '''
     compute_MSE = lambda angle_offset: np.mean((np.abs(ground_truth - compare_obj*np.exp(1j*angle_offset)))**2)
-    results = minimize(compute_MSE, 0, method=None,  
-                       bounds=[(-np.pi, np.pi)], tol=1e-3, options={'maxiter': 2000, 'disp':False})
+    # method can be Nelder-Mead, L-BFGS-B, TNC, SLSQP, Powell, and trust-constr
+    results = minimize(compute_MSE, 0, method='Nelder-Mead',  
+                       bounds=[(-np.pi, np.pi)], tol=1e-12, options={'maxiter': 10000, 'disp':False})
     return(results.x)
