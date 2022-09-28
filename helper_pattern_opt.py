@@ -30,18 +30,15 @@ def load_multiplexed(num_patterns,
                      save_tag_multiplexed,
                      bit_depth,
                      exposure=1,
-                     real_mult=False,
                      dtype=tf.float32,
                      multiplexed_description='',
                      background_subtraction = False):
     im_stack_multiplexed = []
 
     for p in range(num_patterns):
-        if real_mult:
-            file_path = image_path + '/Multiplex' + multiplexed_description + '/{0:04}.png'.format(p)
-        else:
-            file_path = image_path + '/' + 'multiplexed' + '/' +\
-                save_tag_multiplexed + '/' + 'mult_image_' + str(p) + '.png'
+
+        file_path = image_path + '/Multiplex' + multiplexed_description + '/{0:04}.png'.format(p)
+
         im = tf.io.read_file(file_path)
         im = tf.io.decode_image(
                 im, channels=0, dtype=tf.dtypes.uint16)
@@ -54,9 +51,9 @@ def load_multiplexed(num_patterns,
             Ibk_0 = tf.reduce_mean(black_img)
             im = tf.maximum(im-Ibk_0, 0)
             
-        if real_mult:
-            # rotate
-            im = tf.image.rot90(im,3)
+
+        # rotate
+        im = tf.image.rot90(im,3)
             
         im = tf.cast(im, dtype)
         im = im/float(2**bit_depth-1)/exposure
@@ -140,7 +137,6 @@ def load_img_stack_real_data(image_path, num_patterns,
                              bit_depth,
                              force_x_corner=None,
                              force_y_corner=None,
-                             real_mult=False,
                              multiplexed_description='',
                              exposure=1,
                              ):
@@ -161,7 +157,6 @@ def load_img_stack_real_data(image_path, num_patterns,
                      image_path,
                      save_tag_multiplexed,
                      bit_depth,
-                     real_mult=real_mult,
                      dtype=tf.float32,
                      multiplexed_description = multiplexed_description,
                      exposure=exposure,
