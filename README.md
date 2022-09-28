@@ -1,4 +1,17 @@
 # LED_PVAE
+
+Commands for synthetic data:
+
+
+Commands for real data:
+bsub -oo output_frog_mult6_v3_100k -J job4 -n 8 -gpu "num=1" -q gpu_a100 python FPM_VAE_v3.py --input_path dataset_frog_blood_v3 --save_path frog_mult6_v3_100k -i 100000 -p 1 --td 87 --nb 3 --nfm 5 --nfmm 1.2 --dp 0 --lr 1e-4 --norm 100 --se 4 --ks 4 --il 3 --pnm 26869.35 -b 4 --klm 1.0 --klaf 1 --normal --visualize --en 0 --save_tag_mult real_multiplexed --real_data --uf 1 --use_window --real_mult --xcrop 512 --ycrop 512 --si 20000 --md _Dirichlet --train
+
+bsub -oo output_frog_mult6_v3_100k_fff -J job4 -n 8 -gpu "num=1" -q gpu_a100 python FPM_VAE_v3.py --input_path dataset_frog_blood_v3 --save_path frog_mult6_v3_100k -i 100000 -p 1 --td 87 --nb 3 --nfm 5 --nfmm 1.2 --dp 0 --lr 1e-4 --norm 100 --se 4 --ks 4 --il 3 --pnm 26869.35 -b 4 --klm 1.0 --klaf 1 --normal --restore --ulc --visualize --en 0 --save_tag_mult real_multiplexed --real_data --uf 1 --use_window --real_mult --xcrop 512 --ycrop 512 --si 20000 --md _Dirichlet --fff_reconstruct
+
+
+
+
+
 Physics-informed variational autoencoder for LED array microscopy.
 
 conda environment (make into yaml file):

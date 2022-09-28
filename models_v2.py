@@ -26,7 +26,7 @@ def create_encode_net(image_x,
                       image_y_r,
                       num_leds,
                       num_feature_maps_vec,
-                      batch_size_per_gpu,
+                      batch_size,
                       num_blocks, 
                       kernel_size, 
                       stride_encode,
@@ -35,38 +35,56 @@ def create_encode_net(image_x,
                       dropout_prob,
                       intermediate_layers,
                       intermediate_kernel,
-                      encode_net_ind=0,
-                      use_coords = False,
-                      coords = None,
-                      feature_maps_multiplier=2,
-                      append_r = False, # append the ground truth reconstruction
-                      r_channels = None
+                      coords,
+                      initial_repeats, # how many times I_m is repeated
+                      encode_net_ind=0,                      
+                      feature_maps_multiplier=2, 
+                      real_data=False,
                       ):
       
     num_feature_maps_vec = feature_maps_multiplier*np.array(num_feature_maps_vec)
-    
-    if append_r:
-        input_R = tf.keras.Input(shape=(image_x_r,image_y_r,r_channels), 
-                                  batch_size = batch_size_per_gpu, name='input_R')
-     
+
     input_Im = tf.keras.Input(shape=(image_x,image_y,1), 
-                              batch_size = batch_size_per_gpu, name='I_m')
-    input_alpha = tf.keras.Input(shape=(num_leds,), 
-                                  batch_size=batch_size_per_gpu,
-                                  name='alpha_sample')
-    
+                              batch_size = batch_size, name='I_m')
+
     input_Im_rescaled = tf.image.resize(input_Im, [image_x_r,image_y_r], 
                                         method='nearest',
                                         preserve_aspect_ratio=False,
                                         antialias=False, name='resize'
                                         )
-    # repeat input_Im
-    if append_r:
-        extra_repeats = (num_leds*2+r_channels)%feature_maps_multiplier
-    else:
-        extra_repeats = (num_leds*2)%feature_maps_multiplier
+    
+    input_alpha = tf.keras.Input(shape=(num_leds,), 
+                                  batch_size=batch_size,
+                                  name='alpha_sample')
+    
+    if real_data:
+        input_coords_xm = tf.keras.Input(shape=(image_x,image_y), 
+                                  batch_size = batch_size, name='coords_xm')
+    
+        input_coords_ym = tf.keras.Input(shape=(image_x,image_y), 
+                                  batch_size = batch_size, name='coords_ym')
         
-    input_Im_repeat = tf.repeat(input_Im_rescaled, num_leds+extra_repeats, axis=-1)
+        input_coords_xm_rescaled = tf.expand_dims(input_coords_xm, -1)
+        input_coords_xm_rescaled = tf.image.resize(input_coords_xm_rescaled, [image_x_r,image_y_r], 
+                                            method='nearest',
+                                            preserve_aspect_ratio=False,
+                                            antialias=False, name='resize'
+                                            )
+        input_coords_ym_rescaled = tf.expand_dims(input_coords_ym, -1)
+        input_coords_ym_rescaled = tf.image.resize(input_coords_ym_rescaled, [image_x_r,image_y_r], 
+                                            method='nearest',
+                                            preserve_aspect_ratio=False,
+                                            antialias=False, name='resize'
+                                            )
+        coords = tf.concat((input_coords_xm_rescaled,input_coords_ym_rescaled), axis=-1)
+    
+
+    
+
+    # repeat input_Im
+    extra_repeats = feature_maps_multiplier - (initial_repeats+num_leds)%feature_maps_multiplier
+        
+    input_Im_repeat = tf.repeat(input_Im_rescaled, initial_repeats+extra_repeats, axis=-1)
     
     # repeat input_alpha
     input_alpha_repeat = tf.expand_dims(input_alpha,axis=-2)
@@ -77,22 +95,17 @@ def create_encode_net(image_x,
     
     # combine input_Im and input_alpha
     combined_input = tf.concat((input_Im_repeat,input_alpha_repeat), axis=-1)
-    
-    if append_r:
-        combined_input = tf.concat((input_R, combined_input), axis=-1)
+
     if dropout_prob == 0:
         apply_dropout = False
     else:
         apply_dropout = True
         
-    if use_coords:
-        # want channel to be divisible by feature_maps_multiplier
-        repeats = Fraction(coords.shape[-1]/feature_maps_multiplier).denominator
-        coords_repeat = tf.repeat(coords,repeats,axis=-1)
-        output = tf.concat([combined_input,coords_repeat],axis=-1)
-    else:
-        output = combined_input
 
+    # want channel to be divisible by feature_maps_multiplier
+    repeats = Fraction(coords.shape[-1]/feature_maps_multiplier).denominator
+    coords_repeat = tf.repeat(coords,repeats,axis=-1)
+    output = tf.concat([combined_input,coords_repeat],axis=-1)
     
     # Downsampling through the model
     skips_val = []
@@ -146,8 +159,8 @@ def create_encode_net(image_x,
     skips_pixel_y.append(output.shape[2])        
     skips_pixel_z.append(output.shape[3])
 
-    if append_r:
-        inputs = (input_R, input_Im, input_alpha)
+    if real_data:
+        inputs = (input_Im, input_alpha, input_coords_xm, input_coords_ym)
     else:
         inputs = (input_Im, input_alpha)
         
@@ -162,7 +175,9 @@ def create_encode_net(image_x,
 def create_decode_net(skips_pixel_x,
                       skips_pixel_y,
                       skips_pixel_z,
-                      batch_size_per_gpu,
+                      num_leds,
+                      num_zernike_coeff,
+                      batch_size,
                       final_output_channels, # number of output channels
                       kernel_size, 
                       stride_encode,
@@ -173,9 +188,10 @@ def create_decode_net(skips_pixel_x,
                       intermediate_kernel,
                       net_number = 0,
                       feature_maps_multiplier = 2,
-                      reconstruct = False,
                       use_first_skip = True,
-                      scale_factor_dist = 0,
+                      real_data=False,
+                      change_Ns=False,
+                      vary_pupil=False
                       ):
     
     skips = []
@@ -183,7 +199,7 @@ def create_decode_net(skips_pixel_x,
         skip_input = tf.keras.Input(shape=(skips_pixel_x[skip],
                                            skips_pixel_y[skip],
                                            skips_pixel_z[skip]//feature_maps_multiplier), 
-                                    batch_size = batch_size_per_gpu,
+                                    batch_size = batch_size,
                                     name=str(skip))
         skips.append(skip_input)
     
@@ -262,50 +278,25 @@ def create_decode_net(skips_pixel_x,
                         stride = (1,1), 
                         )   
     
-    '''
-    intermediate_layers = 1
-    # create output mean and variance
+    # reconstruction output
+    output = \
+    conv_block(output, # input
+               final_output_channels*2, # output size channels
+               kernel_size,
+               apply_norm = apply_norm, norm_type = norm_type,
+               apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
+               initializer = initializer, 
+               transpose = False,
+               stride = (1,1),
+               )   
 
-    if reconstruct:
-        output_re, output_im = tf.split(output, [output.shape[-1]//2, output.shape[-1]//2], axis=-1, num=None, name='split')
-        for l in range(intermediate_layers):
-            output_re = \
-            conv_block(output_re, # input
-                       final_output_channels, # output size channels
-                       kernel_size,
-                       apply_norm = apply_norm, norm_type = norm_type,
-                       apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
-                       initializer = initializer, 
-                       transpose = False,
-                       stride = (1,1),
-                       )  
-        
-        output_mean_re, output_var_re = tf.split(output_re, [output_re.shape[-1]//2, output_re.shape[-1]//2], 
-                                                 axis=-1, num=None, name='split')
-        for l in range(intermediate_layers):
-            output_im = \
-            conv_block(output_im, # input
-                       final_output_channels, # output size channels
-                       kernel_size,
-                       apply_norm = apply_norm, norm_type = norm_type,
-                       apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
-                       initializer = initializer, 
-                       transpose = False,
-                       stride = (1,1),
-                       )   
-        output_mean_im, output_var_im = tf.split(output_im, 
-                                                 [output_im.shape[-1]//2, output_im.shape[-1]//2], 
-                                                 axis=-1, num=None, name='split')
-        
-        output_mean = tf.concat((output_mean_re+scale_factor_dist,output_mean_im), axis=-1)
-        output_var = tf.concat((output_var_re,output_var_im), axis=-1)
-        
-    else:
-    '''
-    if 1:
-        output = \
-        conv_block(output, # input
-                   final_output_channels*2, # output size channels
+    output_mean, output_var = tf.split(output, [output.shape[-1]//2, output.shape[-1]//2], 
+                                       axis=-1, num=None, name='split')
+
+    if real_data or vary_pupil:
+        output_small = \
+        conv_block(skips[-1], # input
+                   1, # output size channels
                    kernel_size,
                    apply_norm = apply_norm, norm_type = norm_type,
                    apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
@@ -313,11 +304,78 @@ def create_decode_net(skips_pixel_x,
                    transpose = False,
                    stride = (1,1),
                    )   
+        output_flattened = tf.keras.layers.Flatten()(output_small)
+        
+        # zernike coeff output (effectively delta, as we always initialize zernike coeff with zeros)
 
-        output_mean, output_var = tf.split(output, [output.shape[-1]//2, output.shape[-1]//2], 
-                                           axis=-1, num=None, name='split')
+        zernike_coeff = dense_block(output_flattened, # input
+                                    num_zernike_coeff*2, # extra 2 for probability distribution output
+                                    apply_norm = apply_norm, norm_type=norm_type,
+                                    apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
+                                    initializer = initializer,
+                                    bias_initializer = initializer,
+                                    use_bias = True,
+                                   )
+        
 
-    model = keras.Model(inputs = (skips), outputs = (output_mean, output_var), name='decode_net_' + str(net_number))
+        zernike_coeff_mean, zernike_coeff_var = tf.split(zernike_coeff, [num_zernike_coeff,num_zernike_coeff], 
+                                           axis=-1, num=None, name='split')    
+        
+        zernike_coeff_mean = zernike_coeff_mean/1e5
+        zernike_coeff_var = zernike_coeff_var-10
+        if change_Ns:
+            # Ns delta output
+            Ns_delta = dense_block(output_flattened, # input
+                                   num_leds*2*2, # Ns is num_leds x 2, extra 2 for probability distribution output
+                                   apply_norm = apply_norm, norm_type=norm_type,
+                                   apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
+                                   initializer = initializer,
+                                   bias_initializer = initializer,
+                                   use_bias = True,
+                                   )
+            Ns_delta = Ns_delta/100
+            Ns_delta = tf.keras.layers.Reshape([num_leds,2*2])(Ns_delta)
+            Ns_delta_mean, Ns_delta_var = tf.split(Ns_delta, [2, 2], 
+                                               axis=-1, num=None, name='split')     
+            
+             
+            
+            # cos theta delta output
+    
+            cos_delta = dense_block(output_flattened, # input
+                                    num_leds*2, # extra 2 for probability distribution output
+                                    apply_norm = apply_norm, norm_type=norm_type,
+                                    apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
+                                    initializer = initializer,
+                                    bias_initializer = initializer,
+                                    use_bias = True,
+                                    )
+            cos_delta = cos_delta/1e6
+            cos_delta_mean, cos_delta_var = tf.split(cos_delta, [num_leds,num_leds], 
+                                               axis=-1, num=None, name='split') 
+            
+            # poisson noise multiplier delta
+    
+            pnm_delta = dense_block(output_flattened, # input
+                                    2, # extra 2 for probability distribution output
+                                    apply_norm = apply_norm, norm_type=norm_type,
+                                    apply_dropout=apply_dropout, dropout_prob = dropout_prob, 
+                                    initializer = initializer,
+                                    bias_initializer = initializer,
+                                    use_bias = True,
+                                    )
+    
+            pnm_delta_mean, pnm_delta_var = tf.split(pnm_delta, [1,1], 
+                                               axis=-1, num=None, name='split')     
+            outputs = (output_mean, output_var, Ns_delta_mean, Ns_delta_var, zernike_coeff_mean, zernike_coeff_var, 
+                       cos_delta_mean, cos_delta_var, pnm_delta_mean, pnm_delta_var)
+        else:
+            outputs = (output_mean, output_var, zernike_coeff_mean, zernike_coeff_var, 
+                       )
+    else:
+        outputs = (output_mean, output_var)
+        
+    model = keras.Model(inputs = (skips), outputs = outputs, name='decode_net_' + str(net_number))
 
     model.summary()
     return model
@@ -449,7 +507,7 @@ def dense_block(x, # input
                 apply_norm = False, norm_type='batchnorm',
                 apply_dropout=False, dropout_prob = 0, 
                 initializer = 'glorot_uniform',
-                bias_initializer = 'glorot_uniform',
+                bias_initializer = 'zeros',
                 use_bias = False,
                 ):
     """
@@ -530,6 +588,7 @@ def conv_block(x, # input
                apply_norm = False, norm_type='batchnorm',
                apply_dropout=False, dropout_prob = 0, 
                initializer = 'glorot_uniform', 
+               bias_initializer='zeros',
                transpose = False,
                stride = (2,2),
                use_bias = True,
@@ -550,6 +609,7 @@ def conv_block(x, # input
                                           dilation_rate=(1, 1), 
                                           use_bias=use_bias, 
                                           kernel_initializer=initializer,   
+                                          bias_initializer=bias_initializer,
                                           output_padding=None,
                                           )(x)
         
@@ -557,7 +617,8 @@ def conv_block(x, # input
                                           strides=stride, padding='same',
                                           dilation_rate=(1, 1), 
                                           use_bias=use_bias, 
-                                          kernel_initializer=initializer,   
+                                          kernel_initializer=initializer,  
+                                          bias_initializer=bias_initializer,
                                           output_padding=None,
                                           )(x)        
         
@@ -601,9 +662,13 @@ def conv_block(x, # input
 
 
         x1 = keras.layers.Conv2D(output_last_dim, (kernel_size, kernel_size), strides=stride, padding='valid',
-                                 kernel_initializer=initializer, use_bias=use_bias)(x)
+                                 kernel_initializer=initializer, 
+                                 bias_initializer=bias_initializer,
+                                 use_bias=use_bias)(x)
         x2 = keras.layers.Conv2D(output_last_dim, (kernel_size, kernel_size), strides=stride, padding='valid',
-                                       kernel_initializer=initializer, use_bias=use_bias)(x)
+                                       kernel_initializer=initializer, 
+                                       bias_initializer=bias_initializer,
+                                       use_bias=use_bias)(x)
 
     
     ## Maxout

@@ -9,11 +9,10 @@ Created on Wed Feb 10 12:49:24 2021
 
 import sys
 from zernike_polynomials import get_poly_mat
-import numpy as np
-import matplotlib.pyplot as plt
-import argparse
 
-from create_dataset_functions import find_fpm_params, \
+import numpy as np
+
+from SyntheticMNIST_functions import find_fpm_params, \
                                      create_folder, \
                                      get_paddings, \
                                      find_normalizer, \
@@ -28,9 +27,13 @@ import tensorflow as tf
 from tensorflow.keras import datasets
 import tensorflow_datasets as tfds
 
+try:
+    import matplotlib.pyplot as plt
+    show_figures = True
+except ModuleNotFoundError:
+    show_figures = False
 
-
-
+import argparse
 
 ### COMMAND LINE ARGS ###
 
@@ -38,27 +41,49 @@ parser = argparse.ArgumentParser(description='Get command line args')
 
 parser.add_argument('--save_path', action='store', help='path to save output')
 
+parser.add_argument('--td', action='store_true', dest='truncate_dataset', 
+                    help='only process part of input dataset') 
 
-parser.add_argument('--num_train', type=int, action='store', dest='num_train', \
-                    help='number of training examples to create', default = 1000)
+
+parser.add_argument('--tn_train', type=int, action='store', dest='truncate_number_train', \
+                    help='truncate_number_train', default = 50000)
     
+parser.add_argument('--tn_test', type=int, action='store', dest='truncate_number_test', \
+                help='truncate_number_test', default = 10000)
+        
+        
+parser.add_argument('--rt', action='store_true', dest='random_transform', 
+                    help='randomly transform each image') 
+
 parser.add_argument('--rad', type=float, action='store', dest='LED_radius', \
-                        help='radius of LEDs used on square grid LED array', default = 4)
+                        help='related to number of LEDs used, 5 or 6 for DF, 4 or less for only BF', default = 4)
+
+parser.add_argument('--rad_i', type=float, action='store', dest='LED_radius_inner', \
+                    help='related to number of LEDs used, higher means less LEDs', default = 0)
     
 parser.add_argument('--Nx', type=int, action='store', dest='Nx', \
-                    help='N_obj[0], size of the object in the row direction', default = 256)
+                    help='N_obj[0]', default = 256)
     
 parser.add_argument('--Ny', type=int, action='store', dest='Ny', \
-                    help='N_obj[1], size of the object in the column direction', default = 256)
+                    help='N_obj[1]', default = 256)
         
 parser.add_argument('--dti', type=int, action='store', dest='dataset_type_ind', \
-                    help='dataset type, either 0 or 1. Types are: mnist or foam]', default = 0)
+                    help='dataset type, is an int from 0-6 inclusive. Types are: mnist, cifar, cells, random, colorectal_histology, foam, squares]', default = 0)
+    
+parser.add_argument('--pac', type=int, action='store', dest='pac', \
+                help='pupil_angle_coeff ind', default = 0)
+
+parser.add_argument('--vary_pupil', action='store_true', dest='vary_pupil', 
+                    help='vary the pupil function throughout the dataset') 
+
+parser.add_argument('--rmf', type=float, action='store', dest='reduce_max_factor', \
+                    help='scaling to prevent saturation when converting to uint16', default = 0.9)
 
 parser.add_argument('--ns', type=int, action='store', dest='num_slices', \
                     help='number of z slices', default = 1)
     
 parser.add_argument('--uf', type=int, action='store', dest='upsample_factor', \
-                    help='upsamples the camera sensor pixel size for object reconstruction by this factor', default = 2)
+                    help='upsamples the high res reconstruction by this factor of pixels', default = 2)
     
 parser.add_argument('--ss', type=float, action='store', dest='slice_spacing', \
                         help='spacing between z slices in microns', default = 10)
@@ -73,7 +98,7 @@ parser.add_argument('-w', type=float, action='store', dest='wavelength', \
                         help='wavelength of illumination in microns', default = 0.518)
     
 parser.add_argument('--na', type=float, action='store', dest='NA', \
-                        help='numerical aperture of microscope objective', default = 0.5)
+                        help='numerical Aperture of Objective', default = 0.5)
     
 parser.add_argument('--mag', type=float, action='store', dest='mag', \
                         help='magnification of the system ', default = 20.0)
@@ -85,7 +110,7 @@ parser.add_argument('--dxly', type=float, action='store', dest='ds_led_y', \
                         help='[um] spacing between neighboring LEDs in y direction', default = 4e3)
         
 parser.add_argument('--zl', type=float, action='store', dest='z_led', \
-                        help='z distance from LED array to specimen [um]', default = 69.5e3)
+                        help='z distance from LED array to sample [um]', default = 69.5e3)
 
 args = parser.parse_args()
 
@@ -94,36 +119,30 @@ args = parser.parse_args()
 
 ### INPUTS ###
  
-reduce_max_factor = 0.9 # scaling to prevent saturation when converting to uint16
+reduce_max_factor = args.reduce_max_factor #0.9 # scaling to prevent saturation when converting to uint16
 
 N_obj = np.array([args.Nx, args.Ny])  # Size of the high resolution objects # [66,66]
 dir_name = 'dataset_' + args.save_path
-
+poisson_noise_multiplier = (2**16-1)*0.41 # the higher the multiplier, the lower the noise
+add_poisson_noise = False 
 truncate_dataset = args.truncate_dataset # set to True to only process part of input dataset 
 truncate_number_train = args.truncate_number_train # 60000 mnist, 50000 for cifar
 truncate_number_test = args.truncate_number_test # 10000
 random_transform = args.random_transform 
 min_padding = 0
 LED_radius = args.LED_radius #5 or 6 for DF
-
+LED_radius_inner = args.LED_radius_inner
+vary_phase = False
 num_slices = args.num_slices #1 #3
 slice_spacing = args.slice_spacing #10 # microns
 f = args.f # 0 # -10  # f is distance from the last slice to the focal plane
 dataset_type_ind = args.dataset_type_ind # must be from 0-3 inclusive
-
+filter_obj_slices = True
+randomize_filter = False # apply a different NA filter for each slice, maxing out at synthetic_NA
+different_slices = True # different base image for each slice
+zernike_poly_order = 5 # polynomial order for reconstructing the pupil function
 upsample_factor = args.upsample_factor # 2
 dpix_c = args.dpix_c #6.5
-
-
-
-vary_phase = False
-add_poisson_noise = False 
-
-randomize_filter = False # apply a different NA filter for each slice, maxing out at synthetic_NA
-
-filter_obj_slices = True
-different_slices = True # different base image for each slice
-zernike_poly_order = 5 # polynomial order for the pupil function
 
 wavelength = args.wavelength
 NA = args.NA
@@ -134,26 +153,9 @@ z_led = args.z_led
 
 
 pac = args.pac # which pupil_angle_coeff to choose
-
+vary_pupil = args.vary_pupil
 
 ### END OF INPUTS ###
-
-if pac == 0:
-    pupil_angle_coeff = np.zeros([21,])
-elif pac == 1: # coeff for 32 x 32 pixel spiral algae
-    pupil_angle_coeff = np.array([-2.04910830e-07,  3.75384501e-01,  2.92857743e-01, -4.26261872e-01,
-                                  3.55038938e-01, -1.91027850e-01,  1.43513249e-01,  4.56309749e-02,
-                                  7.14212881e-02,  5.02212709e-02, -9.22143719e-02,  7.23976345e-03,
-                                  1.55727654e-01,  6.85754873e-03,  2.87878445e-01,  1.61213051e-02,
-                                  -5.43829218e-02,  9.89681249e-04,  7.96468714e-02,  3.24678290e-02,
-                                  6.56303883e-02]) #coeff for 32 x 32 pixel spiral algae
-elif pac == 2: # coeff for 512 x 512 pixel spiral algae 
-    pupil_angle_coeff = np.array([-3.08290632e-05,  1.92146293e-01,  1.15356908e-01,  9.28136061e-02,
-                                  3.46543913e-01,  9.33004907e-02, -3.08130106e-02,  3.91602512e-02,
-                                  -7.11402283e-02, -3.91311711e-02,  2.14382272e-03,  5.03207900e-02,
-                                  -1.00275367e-02, -6.23491586e-03, -4.61241552e-04, -9.54524156e-03,
-                                  3.76899487e-03,  3.95392908e-03, -2.67817431e-02,  2.90121983e-03,
-                                  2.40856322e-02]) # coeff for 512 x 512 pixel spiral algae 
 
 dataset_types = ['mnist', 'cifar', 'cells','random','colorectal_histology', 'foam', 'squares']
 dataset_input = dataset_types[dataset_type_ind]
@@ -200,9 +202,32 @@ y_size = Np[1]
 zernike_mat = get_poly_mat(x_size, y_size, x_size*dpix_m, \
                            y_size*dpix_m, wavelength, NA,
                            n_upper_bound = zernike_poly_order, show_figures = False)
+    
+    
+num_zernike_coeff = zernike_mat.shape[-1]
+
+if pac == 0:
+    pupil_angle_coeff = np.zeros([num_zernike_coeff,])
+elif pac == 1: # coeff for 32 x 32 pixel spiral algae
+    pupil_angle_coeff = np.array([-2.04910830e-07,  3.75384501e-01,  2.92857743e-01, -4.26261872e-01,
+                                  3.55038938e-01, -1.91027850e-01,  1.43513249e-01,  4.56309749e-02,
+                                  7.14212881e-02,  5.02212709e-02, -9.22143719e-02,  7.23976345e-03,
+                                  1.55727654e-01,  6.85754873e-03,  2.87878445e-01,  1.61213051e-02,
+                                  -5.43829218e-02,  9.89681249e-04,  7.96468714e-02,  3.24678290e-02,
+                                  6.56303883e-02]) #coeff for 32 x 32 pixel spiral algae
+elif pac == 2: # coeff for 512 x 512 pixel spiral algae 
+    pupil_angle_coeff = np.array([-3.08290632e-05,  1.92146293e-01,  1.15356908e-01,  9.28136061e-02,
+                                  3.46543913e-01,  9.33004907e-02, -3.08130106e-02,  3.91602512e-02,
+                                  -7.11402283e-02, -3.91311711e-02,  2.14382272e-03,  5.03207900e-02,
+                                  -1.00275367e-02, -6.23491586e-03, -4.61241552e-04, -9.54524156e-03,
+                                  3.76899487e-03,  3.95392908e-03, -2.67817431e-02,  2.90121983e-03,
+                                  2.40856322e-02]) # coeff for 512 x 512 pixel spiral algae 
+    
+    
 pupil_angle = np.sum(zernike_mat*pupil_angle_coeff, axis=2)
 pupil = pupil*np.exp(1j*pupil_angle)    
 
+np.save(dir_name + '/dpix_m.npy', dpix_m)
 np.save(dir_name + '/dx_obj.npy', dx_obj)
 np.save(dir_name + '/image_x.npy', image_x)
 np.save(dir_name + '/image_y.npy', image_y)
@@ -349,10 +374,14 @@ x_train, x_test = x_train / 255.0, x_test / 255.0
 
 
 
-# Pad or remove pixels depending on desired object size
+# Pad with minimum padding zeros 
 
-pad_x = int(N_obj[0] - x_train.shape[1])
-pad_y = int(N_obj[1] - x_train.shape[2])
+if random_transform:
+    pad_x = np.minimum(min_padding, int(N_obj[0] - x_train.shape[1]))
+    pad_y = np.minimum(min_padding, int(N_obj[1] - x_train.shape[2]))
+else:
+    pad_x = int(N_obj[0] - x_train.shape[1])
+    pad_y = int(N_obj[1] - x_train.shape[2])
 
 pad_x_0, pad_x_1 = get_paddings(pad_x)
 pad_y_0, pad_y_1 = get_paddings(pad_y)
@@ -398,15 +427,18 @@ process_img_func0 = lambda img_stack: process_img_multislice(img_stack,
                                                                N_obj, Ns, pupil, Np,
                                                                LED_vec, LEDs_used_boolean,
                                                                random_transform,
-                                                               False,
+                                                               False, # vary_phase
                                                                num_slices,
                                                                H_scalar,
                                                                H_scalar_f,
                                                                filter_obj_slices,
                                                                random_flag,
-                                                               False,
+                                                               False, # randomize_filter
                                                                NAfilter_function,
-                                                               synthetic_NA)
+                                                               synthetic_NA,
+                                                               False, # vary_pupil
+                                                               num_zernike_coeff,
+                                                               zernike_mat,)
 
 
 process_img_func = lambda img_stack: process_img_multislice(img_stack, 
@@ -420,8 +452,12 @@ process_img_func = lambda img_stack: process_img_multislice(img_stack,
                                                             H_scalar_f,
                                                             filter_obj_slices,
                                                             random_flag,
+                                                            randomize_filter,
                                                             NAfilter_function,
-                                                            synthetic_NA)
+                                                            synthetic_NA,
+                                                            vary_pupil,
+                                                            num_zernike_coeff,
+                                                            zernike_mat,)
 
 
 if show_figures:
