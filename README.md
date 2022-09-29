@@ -13,7 +13,7 @@ The figure below shows the overview of the end-to-end `LED_PVAE` pipeline.
 
 <p align="center"><img src="imgs/intro_VAE_full.png" width=700 /></p>
 
-The main algorithm comprising the `LED_PVAE` is inspired by the variational autoencoder. This repository allows creation of synthetic object datasets and generation of corresponding noisy intensity images. Object reconstruction from the intensity images can be performed with the physics-informed variational autoencoder or a standard gradient-based iterative algorithm. Options are included for using synthetic data or real experimental data collected on an LED array microscope. Code is included for visualization and comparison of results. An experimental dataset for use with this repository is available on [figshare](https://figshare.com/s/635499acfdcdf0893750).
+The main algorithm comprising the `LED_PVAE` is inspired by the variational autoencoder. This repository allows creation of synthetic object datasets and generation of corresponding noisy intensity images. Object reconstruction from the intensity images can be performed with the physics-informed variational autoencoder or a standard gradient-based iterative algorithm. Options are included for using synthetic data or real experimental data collected on an LED array microscope. Code is included for visualization and comparison of results, and instructions are below for reproducing all the figures of the paper. An experimental dataset of frog blood smear images for use with this repository is available on [figshare](https://figshare.com/s/635499acfdcdf0893750).
 
 # Table of contents
 1. [Installation](#Installation)
@@ -104,6 +104,11 @@ Run the following for standard iterative optimization:
 ```
 ./optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3
 ```
+
+Analyze/visualize the data
+
+
+Make all plots from the paper
 
 
 
