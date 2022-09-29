@@ -52,7 +52,7 @@ Navigate to the `LED_PVAE` directory.
 
 First, create the dataset of objects:
 ```
-python SyntheticMNIST_multislice.py --save_path foam_v2_pac1 --td --tn_train 15000 --tn_test 0 --rad 3 --Nx 128 --Ny 128 --dti 5 --rmf 0.9 -f 0 --ns 1 --pac 1
+python SyntheticMNIST_multislice.py --save_path foam_v2_pac1 --td --tn_train 10000 --tn_test 0 --rad 3 --Nx 128 --Ny 128 --dti 5 --rmf 0.9 -f 0 --ns 1 --pac 1
 ```
 
 Next, create the multiplexed illumination patterns and emulate the corresponding intensity images (i.e. measurements) for different noise levels (to get the same illumination patterns for every noise level, do not run commands below in parallel, complete the first command before running the others):
@@ -79,13 +79,26 @@ python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e5
 
 Run the following to train the P-VAE on the dataset with different illumination patterns for every object:
 ```
-./scripts/sweep.sh dataset_foam_v2_pac1 foam_pac1
+./scripts/sweep.sh dataset_foam_v2_pac1 foam_pac1 false
 ```
 
 Run the following to train the P-VAE on the dataset with the **same illumination patterns for every object:
 ```
-./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1
+./scripts/sweep.sh dataset_foam_v2_pac1 foam_pac1 true
 ```
+
+STOPPED HERE
+
+Run the following to train the P-VAE on a training dataset of size 1 (object index 0 of the complete dataset, using the illumination pattern from the different illuminations):
+```
+./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1
+```
+
+Run the following to train the P-VAE on a training dataset of size 1 (object index 0 of the complete dataset, using the illumination pattern from the case where they are all the same):
+```
+./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1
+```
+
 
 Run the following for standard iterative optimization:
 ```
