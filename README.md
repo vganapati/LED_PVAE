@@ -1,5 +1,3 @@
-# LED_PVAE
-
 <br/>
 <p align="center"><img src="imgs/logo.png" width=500 /></p>
 
