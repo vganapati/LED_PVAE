@@ -75,12 +75,12 @@ python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e3
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e5_single_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_single_dm01_p4
 ```
 
-Run the following to train the P-VAE on the dataset with different illumination patterns for every object:
+Run the following to train the P-VAE on the dataset with different illumination patterns for every object, sweeping through different dataset sizes, noise levels, and measurements per object:
 ```
 ./scripts/sweep.sh dataset_foam_v2_pac1 foam_pac1 false
 ```
 
-Run the following to train the P-VAE on the dataset with the **same** illumination patterns for every object:
+Run the following to train the P-VAE on the dataset with the **same** illumination patterns for every object, sweeping through different dataset sizes, noise levels, and measurements per object:
 ```
 ./scripts/sweep.sh dataset_foam_v2_pac1 foam_pac1 true
 ```
