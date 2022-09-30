@@ -1204,7 +1204,6 @@ if visualize:
     if len(zernike_dist_vec)>0:
         zernike_sample = zernike_dist_vec[sample_ind].sample()
         zernike_sample = tf.expand_dims(tf.expand_dims(zernike_sample,1),1)
-        print('!!!')
         pupil_angle = tf.reduce_sum(zernike_mat*tf.cast(zernike_sample, tf.float64), axis=-1)
         pupil_new = pupil*tf.exp(1j*tf.cast(pupil_angle, tf.complex128))
         mask = np.ones_like(pupil)
@@ -1212,6 +1211,8 @@ if visualize:
         plt.figure()
         plt.imshow(mask*pupil_angle[batch_ind,:,:])
         plt.colorbar()
+    else:
+        pupil_new = pupil
 
     
     if len(cos_dist_vec)>0:

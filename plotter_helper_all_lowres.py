@@ -15,7 +15,7 @@ import os
 
 ##############
 ### INPUTS ###
-input_data='dataset_MNIST_multislice_v2' # 'dataset_foam_v2_pac1' or 'dataset_MNIST_multislice_v2'
+input_data='dataset_foam_v2_pac1' # 'dataset_foam_v2_pac1' or 'dataset_MNIST_multislice_v2'
 noise_level=3 # poisson_noise_multiplier is 10^noise_level 
 single = False # single means that a single set of the SAME illumination patterns are used for all objects
 obj_ind = 0 # object index of the dataset
@@ -29,7 +29,7 @@ vmax_ang = np.pi/2
 vmin_alpha = 0
 vmax_alpha = 1
 
-create_video = True
+create_video = False
 
 ### END of INPUTS ###
 #####################

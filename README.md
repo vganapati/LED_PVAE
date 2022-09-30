@@ -23,20 +23,17 @@ The main algorithm comprising the `LED_PVAE` is inspired by the variational auto
 # Installation <a name="Installation"></a>
 
 First create a `conda` environment:
-
 ```
 conda env create -f environment.yml
 conda activate LED
 ```
 
 Once you're done with the above step, you need to use `pip install` to finish installing all the dependencies, using:
-
 ```
 pip install -r requirements.txt
 ```
 
 Finally, navigate to the folder where you want the repository and clone the repository:
-
 ```
 git clone https://github.com/vganapati/LED_PVAE.git
 ```
@@ -107,18 +104,17 @@ Run the following to train the P-VAE on a training dataset of size 1 (object ind
 ./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 9 true
 ```
 
-
 Run the following for standard iterative optimization, using the illumination patterns from the case where they are all different:
 ```
-./optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3 false
+./scripts/optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3 false
 ```
 
 Run the following for standard iterative optimization, using the illumination pattern from the case where they are all the same:
 ```
-./optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3 true
+./scripts/optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3 true
 ```
 
-Analyze and visualize the results by creating $\latex$ tables, using the following script and trying different inputs. It is recommended to run the following using a GUI such as `spyder`.
+Analyze and visualize the results by creating $\LaTeX$ tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
 ```
 final_analyze_table.py
 ```
@@ -138,11 +134,8 @@ python SyntheticMNIST_multislice.py --save_path MNIST_multislice_v2_test --td --
 Next, create the multiplexed illumination patterns and emulate the corresponding intensity images (i.e. measurements) for different noise levels (to get the matching illumination patterns for every noise level, do not run commands below in parallel, complete the first command before running the others):
 ```
 python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e4_dm01_p4 --pnm 1e4 --dm 0.1 -p 4
-
 python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e2_dm01_p4 --pnm 1e2 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
-
 python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e3_dm01_p4 --pnm 1e3 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
-
 python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e5_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
 
 ```
@@ -171,7 +164,7 @@ Run the following for standard iterative optimization, using the illumination pa
 ./optimizer_sweep_single.sh dataset_MNIST_multislice_v2 10000 5 1e-3 false
 ```
 
-Analyze and visualize the results by creating $\latex$ tables, using the following script and trying different inputs. It is recommended to run the following using a GUI such as `spyder`.
+Analyze and visualize the results by creating $\LaTeX$ tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
 ```
 final_analyze_table.py
 ```
@@ -183,7 +176,7 @@ plotter_helper_all_lowres.py
 
 ## Experimental Dataset <a name="experimental"></a>
 
-Download the experimental dataset from [figshare](https://figshare.com/s/635499acfdcdf0893750), and place into the `LED_PVAE` folder.
+Download the experimental dataset as a `.zip` file from [figshare](https://figshare.com/s/635499acfdcdf0893750), uncompress and place into the `LED_PVAE` folder.
 
 Run standard iterative optimization using the full stack of intensity images obtained by sequential, single LED illumination:
 ```

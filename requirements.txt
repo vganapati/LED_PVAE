@@ -1,3 +1,5 @@
 imageio==2.19.3
 scikit-image==0.19.3
 tensorflow_datasets==4.2.0
+spyder==5.3.3
+tabulate==0.8.10

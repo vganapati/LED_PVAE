@@ -9,9 +9,7 @@ Created on Thu Feb 11 10:10:15 2021
 import sys
 
 from SyntheticMNIST_functions import create_folder, F, Ft
-from SyntheticMNIST_multislice_functions import create_low_res_stack_multislice2, \
-                                                create_low_res_stack_multislice
-
+from fpm_functions import create_low_res_stack_multislice2
 import tensorflow as tf
 import numpy as np
 import time
@@ -328,9 +326,9 @@ if filter_hr:
 
 if plt_flag: # only needed for plotting purposes
     pupil_angle_final = (tf.reduce_sum(zernike_mat*pupil_angle_coeff, axis=2)).numpy()
-    lr_calc_stack_final = create_low_res_stack_multislice(hr_computed, N_obj, Ns, \
-                                                          pupil*tf.exp(1j*pupil_angle_final), Np, LED_vec, LEDs_used_boolean, \
-                                                          num_slices, H_scalar, H_scalar_f)
+    lr_calc_stack_final = create_low_res_stack_multislice2(hr_computed, N_obj, Ns, \
+                                                           pupil*tf.exp(1j*pupil_angle_final), Np, LED_vec[LEDs_used_boolean], \
+                                                               num_slices, H_scalar, H_scalar_f, num_leds)
 
 compare_values_all = []
 for s in range(num_slices):

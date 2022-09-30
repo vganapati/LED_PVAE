@@ -10,8 +10,8 @@ from final_visualize_v2_helper import visualize_all, make_table
 
 #####################
 ### INPUTS ###
-input_data='dataset_MNIST_multislice_v2'#'dataset_foam_v2_pac1' 
-save_tag='mnist'#'foam_pac1' 
+input_data='dataset_foam_v2_pac1' #'dataset_foam_v2_pac1' or 'dataset_MNIST_multislice_v2'
+save_tag='foam_pac1' #'foam_pac1' or 'mnist'
 single = False # single means that a single set of the SAME illumination patterns are used for all objects
 
 # items that can be varied
@@ -25,14 +25,14 @@ vary_vec = num_patterns_vec # num_examples_vec
 vary_name = 'num_patterns_vec' # 'num_examples_vec'
 
 # index of the vectors that is fixed if the variable is not varied
-noise_level_ind=1
+noise_level_ind=0
 num_examples_ind=3
 num_patterns_ind=0
 compare_val_ind=1
 
 # Average over for text tables
 obj_ind_vec = [0,1,2,3,4,5,6,7,8,9]
-slice_ind_vec = [0,1] # [0] for single slice (2D) or [0,1] for 2 slices (3D)
+slice_ind_vec = [0] # [0] for single slice (2D) or [0,1] for 2 slices (3D)
 
 obj_ind_visualize = 0 # for graphics tables
 slice_ind_visualize = 0 # for graphics tables
@@ -52,7 +52,7 @@ vmax = np.pi/2
 # change inputs to match what was used in training/optimization of dataset
 batch_size_opt = 5 # batch size in the iterative optimization
 num_iter = 10000 # number of iterations in the iterative optimization
-num_slices = 2
+num_slices = 1 # 2 for 'dataset_MNIST_multislice_v2', 1 for 'dataset_foam_v2_pac1'
 t2_reg = 1e-2 # regularization lambda
 adam_learning_rate = 1e-3 # learning rate of the iterative solve
 dataset_type = 'training'

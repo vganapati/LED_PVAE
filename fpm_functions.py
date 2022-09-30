@@ -391,6 +391,77 @@ def create_low_res_stack_multislice(obj_stack, N_obj, Ns,
 
     return(low_res_stack.stack()) #(tf.transpose(low_res_stack.stack(),perm=[1,2,0]))
 
+def create_low_res_stack_multislice2(obj_stack, N_obj, Ns, 
+                                     P, Np, 
+                                     LED_vec_i, 
+                                     num_slices, H_scalar, H_scalar_f, 
+                                     batch_size):
+    
+    '''
+    Create stack of single LED images from the high resolution object stack
+    LED_vec_i is LED_vec[LEDs_used_boolean]
+    '''
+
+    # low_res_stack = []
+
+    low_res_stack = tf.TensorArray(tf.float64, size=0, dynamic_size=True)
+    
+    for ind in tf.range(batch_size):
+        LED_i = tf.gather(LED_vec_i,ind)
+        low_res = create_low_res_multislice2(obj_stack, N_obj, Ns, \
+                                            P, Np, LED_i, num_slices,\
+                                            H_scalar, H_scalar_f)    
+        
+        low_res_stack = low_res_stack.write(low_res_stack.size(), low_res)
+        # low_res = tf.expand_dims(low_res, axis=-1)
+
+    # low_res_stack = tf.concat(low_res_stack,axis=-1) 
+
+    return(tf.transpose(low_res_stack.stack(),perm=[1,2,0]))
+
+def create_low_res_multislice2(obj_stack, 
+                               N_obj, Ns, P, Np, LED_i, 
+                               num_slices,
+                               H_scalar, H_scalar_f):
+    
+    '''
+    Creation of single low resolution image with a pixel shift given by Ns
+    
+    Ns is angle with respect to topmost slice
+    
+    '''
+    
+    # Ns_i = Ns[LED_i,:]
+    Ns_i = tf.gather(Ns, LED_i)
+    cen = (N_obj/2-Ns_i) + N_obj/2 # cen = (N_obj//2+Ns[LED_i,:]) + N_obj//2
+    
+    O = F(obj_stack[0])
+    Psi0 = tf.pad(O,((N_obj[0]//2,N_obj[0]//2),(N_obj[1]//2,N_obj[1]//2)))
+    Psi0 = downsamp_slice(Psi0, cen, N_obj)
+    
+    for s in range(1,num_slices):
+        # scalar propagate Psi0 to next object
+        Psi0 = Psi0*H_scalar
+        
+        #Multiply by object slice in real space
+        Psi0 = F(obj_stack[s]*Ft(Psi0))
+    
+    # scalar propagate to the focal plane
+    
+    Psi0 = Psi0*H_scalar_f
+    
+    # Slice to dimensions of Np (downsample in real space) and filter by NA
+    Psi0 = tf.slice(Psi0, tf.cast(N_obj//2,tf.int32) - tf.cast(Np//2, tf.int32), Np)*P
+    
+    psi0 = Ft(Psi0) #low resolution field
+    
+    intensity_i = psi0*tf.math.conj(psi0)
+    
+    intensity_i = tf.cast(intensity_i, dtype=tf.float64)
+
+    return intensity_i
+
+
 def create_low_res_multislice(obj_stack, 
                               N_obj, Ns, P, Np, LED_i, 
                               num_slices,
