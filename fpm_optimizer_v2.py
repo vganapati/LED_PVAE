@@ -236,7 +236,8 @@ if multiplexed:
                      save_tag,
                      bit_depth=16,
                      dtype=tf.float64,
-                     multiplexed_description=multiplexed_description)   
+                     multiplexed_description=multiplexed_description,
+                     real_mult=True)   
 
     multiplexed_stack = multiplexed_stack.numpy()
     

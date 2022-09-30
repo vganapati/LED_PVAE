@@ -48,10 +48,6 @@ parser.add_argument('--md', dest = 'multiplexed_description',
 parser.add_argument('--use_window', action='store_true', dest='use_window', 
                     help='uses a windowing function for real data') 
 
-parser.add_argument('--da', action='store_true', dest='download_all', 
-                    help='downloads all patches, otherwise just downloads the full field reconstruction') 
-
-
 args = parser.parse_args()
 
 
@@ -69,8 +65,7 @@ visualize_trim = 64
 
 x_crop_size = args.x_crop_size
 y_crop_size = args.y_crop_size
-    
-download_all = args.download_all
+
 
 if iterative:
     use_window = False
@@ -118,6 +113,7 @@ for ss in range(num_slices):
     plt.imshow(np.abs(full_field[ss,visualize_trim:-visualize_trim,
                                   visualize_trim:-visualize_trim]))
     plt.colorbar()
+    plt.show()
     # plt.savefig(subfolder_name + '/full_field_amp.png')
     
     plt.figure()
@@ -125,64 +121,6 @@ for ss in range(num_slices):
     plt.imshow(np.angle(full_field[ss,visualize_trim:-visualize_trim,
                                     visualize_trim:-visualize_trim]))
     plt.colorbar()
+    plt.show()
     # plt.savefig(subfolder_name + '/full_field_angle.png')
     
-# calculate merit, only if download_all is passed
-
-if download_all:
-    all_patch_folders = glob.glob(subfolder_name + '/x_corner_*_y_corner_*')
-    
-    mse_vec = []
-    ssim_vec = []
-    psnr_vec = []
-    
-    for folder in all_patch_folders:
-        lr_calculated = np.load(folder + '/lr_calc_stack_final.npy')/exposure # num_leds x x_size x y_size
-        
-        if iterative and multiplexed_description == '_Dirichlet':
-            lr_calculated = lr_calculated/2
-        
-        lr_observed = window_2d*np.load(folder + '/lr_observed_stack.npy')/exposure # num_leds x x_size x y_size
-        
-        if verbose:
-            led_ind = num_leds//2
-            plt.figure()
-            plt.title('lr_calculated')
-            plt.imshow(lr_calculated[led_ind,:,:])
-            plt.colorbar()
-            
-            plt.figure()
-            plt.title('lr_observed')
-            plt.imshow(lr_observed[led_ind,:,:])
-            plt.colorbar()
-    
-        mse_vec_patch_i = []
-        ssim_vec_patch_i = []
-        psnr_vec_patch_i = []
-        
-        for led in range(num_leds):
-            mse, ssim, psnr = compare_low_res(lr_calculated[led,:,:], lr_observed[led,:,:])
-            mse_vec_patch_i.append(mse)
-            ssim_vec_patch_i.append(ssim)
-            psnr_vec_patch_i.append(psnr)
-    
-        mse_vec_patch_i = np.stack(mse_vec_patch_i)
-        ssim_vec_patch_i = np.stack(ssim_vec_patch_i)
-        psnr_vec_patch_i = np.stack(psnr_vec_patch_i)   
-        
-        mse_vec.append(mse_vec_patch_i)
-        ssim_vec.append(ssim_vec_patch_i)
-        psnr_vec.append(psnr_vec_patch_i)
-        
-    mse_vec = np.stack(mse_vec) # patches x leds
-    ssim_vec = np.stack(ssim_vec) # patches x leds
-    psnr_vec = np.stack(psnr_vec) # patches x leds
-    
-    print('average MSE is: ', np.mean(mse_vec))
-    print('average SSIM is: ', np.mean(ssim_vec))
-    print('average PSNR is: ', np.mean(psnr_vec))
-    
-    led_position_xy = np.load(input_path + '/led_position_xy.npy')
-    mse_per_led = np.mean(mse_vec,axis=0)
-    show_alpha_scatter(led_position_xy, mse_per_led, 
-                       None)

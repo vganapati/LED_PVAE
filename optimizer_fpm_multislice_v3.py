@@ -113,7 +113,8 @@ if multiplexed:
                      image_path,
                      save_tag,
                      bit_depth=16,
-                     dtype=tf.float64)    
+                     dtype=tf.float64,
+                     )    
     multiplexed_stack = multiplexed_stack.numpy()
     multiplexed_stack[multiplexed_stack<0] = 0
     multiplexed_stack[multiplexed_stack>1] = 1

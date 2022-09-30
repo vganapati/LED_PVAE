@@ -119,7 +119,7 @@ Analyze and visualize the results by creating $\LaTeX$ tables, using the followi
 final_analyze_table.py
 ```
 
-Visualize the dataset with the following scripts:
+Visualize the dataset with the following script. It is recommended to run the following using `spyder`.
 ```
 plotter_helper_all_lowres.py
 ```
@@ -168,7 +168,7 @@ Analyze and visualize the results by creating $\LaTeX$ tables, using the followi
 final_analyze_table.py
 ```
 
-Visualize the dataset with the following scripts:
+Visualize the dataset with the following script. It is recommended to run the following using `spyder`.
 ```
 plotter_helper_all_lowres.py
 ```
@@ -194,12 +194,12 @@ Run the physics-informed variational autoencoder, using a single intensity image
 python FPM_VAE_v3.py --input_path dataset_frog_blood_v3 --save_path frog_blood_pvae -i 100000 -p 1 --td 87 --nb 3 --nfm 5 --nfmm 1.2 --dp 0 --lr 1e-4 --norm 100 --se 4 --ks 4 --il 3 --pnm 26869.35 -b 4 --klm 1.0 --klaf 1 --normal --visualize --en 0 --save_tag_mult real_multiplexed --real_data --uf 1 --use_window --real_mult --xcrop 512 --ycrop 512 --si 20000 --md _Dirichlet --train --fff_reconstruct
 ```
 
-Visualize the dataset with the following script:
+Visualize the dataset with the following script. It is recommended to run the following using `spyder`.
 ```
-FPM_VAE/data_figures.py
+data_figures.py
 ```
 
 Visualize the results, comparing the standard iterative with the physics-informed variational autoencoder with the following script:
 ```
-python compare_iterative.py --save_tag_recons _single_LED_iterative _p1_LED_iterative --save_path frog_blood_pvae
+python compare_iterative.py --save_tag_recons _single_LED_iterative _p1_LED_iterative --save_path frog_blood_pvae --md _Dirichlet
 ```

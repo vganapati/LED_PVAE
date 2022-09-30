@@ -15,17 +15,18 @@ from visualizer_functions import make_cutout_fig
 import imageio
 import sys
 
-# Inputs
+##############
+### INPUTS ###
 
 dataset_path = 'dataset_frog_blood_v3'
 object_path = 'training/example_000000'
 mult_object_inds = [0,1,2,3,4,5,6,7]
 
 multiplex_description = '_Dirichlet'
-start_x_corner = 64 #768
-start_y_corner = 64 #768
-image_x = 2048-64*2 #512
-image_y = 2048-64*2 #512
+start_x_corner = 64
+start_y_corner = 64
+image_x = 2048-64*2
+image_y = 2048-64*2
 
 start_x_corner_inner = 480
 start_y_corner_inner = 480
@@ -34,9 +35,12 @@ image_y_inner = 512
 
 mult_ind = 0
 slice_ind=0
-cmap = 'gray' # 'gray'
+cmap = 'gray'
 
-neural_net_save_path = 'frog_mult6_v3_100k'
+neural_net_save_path = 'frog_blood_pvae'
+
+### END OF INPUTS ###
+#####################
 
 # Load values
 
@@ -53,46 +57,6 @@ create_folder(save_folder)
 im_stack = np.load(dataset_path + '/' + object_path + '/im_stack.npy')
 
 
-'''
-# Plot reconstruction
-
-def plot_recon(reconstruction_patch,save_folder,tag,slice_ind):
-    amplitude_patch = np.abs(reconstruction_patch)
-    phase_patch = np.angle(reconstruction_patch)
-
-    plt.figure()
-    plt.imshow(amplitude_patch, cmap=cmap)
-    plt.axis('off')
-    plt.savefig(save_folder + '/' + tag + '_recon_patch_amp_slice_' + str(slice_ind), dpi=300, bbox_inches='tight', pad_inches=0)
-    plt.colorbar()
-
-    plt.figure()
-    plt.imshow(phase_patch, cmap=cmap) # cmap='twilight_shifted', cmap='twilight'
-    plt.axis('off')
-    plt.savefig(save_folder + '/' + tag + '_recon_patch_phase_slice_' + str(slice_ind), dpi=300, bbox_inches='tight', pad_inches=0)
-    plt.colorbar()
-
-# Reconstruction from iterative for object_path
-iterative_reconstruction = np.load(dataset_path + '/' + object_path + '/reconstruction/full_field.npy')[slice_ind]
-reconstruction_patch = iterative_reconstruction[start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
-tag='iterative'
-plot_recon(reconstruction_patch,save_folder,tag,slice_ind)
-np.save('iter_reconstruction_patch.npy',reconstruction_patch)
-
-
-# Reconstruction from neural network
-nn_reconstruction = np.load(neural_net_save_path + '/full_field_example_0.npy')[slice_ind,start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
-# nn_reconstruction = np.load(save_path + '/full_field_example_' + str(example_num) + '.npy')[slice_ind]
-# reconstruction_patch = nn_reconstruction[start_x_corner:start_x_corner+image_x, start_y_corner:start_y_corner+image_y]
-tag='neural_net'
-plot_recon(nn_reconstruction,save_folder,tag,slice_ind)
-
-np.save('nn_reconstruction_patch.npy',reconstruction_patch)
-
-
-
-# XXX choose the phase reference to make them as close as possible
-'''
 
 # function to make figures for each alpha and im_patch of interest
 def make_figs(im_patch, alpha, vmax, tag, save_folder,ind):
