@@ -25,20 +25,24 @@ def clamp(x):
     mask_1=x>1
     return(x*(1-mask_0-mask_1) +1*(mask_1))
 
+
 def load_multiplexed(num_patterns,
                      image_path,
                      save_tag_multiplexed,
                      bit_depth,
                      exposure=1,
+                     real_mult=False,
                      dtype=tf.float32,
                      multiplexed_description='',
                      background_subtraction = False):
     im_stack_multiplexed = []
 
     for p in range(num_patterns):
-
-        file_path = image_path + '/Multiplex' + multiplexed_description + '/{0:04}.png'.format(p)
-
+        if real_mult:
+            file_path = image_path + '/Multiplex' + multiplexed_description + '/{0:04}.png'.format(p)
+        else:
+            file_path = image_path + '/' + 'multiplexed' + '/' +\
+                save_tag_multiplexed + '/' + 'mult_image_' + str(p) + '.png'
         im = tf.io.read_file(file_path)
         im = tf.io.decode_image(
                 im, channels=0, dtype=tf.dtypes.uint16)
@@ -51,9 +55,9 @@ def load_multiplexed(num_patterns,
             Ibk_0 = tf.reduce_mean(black_img)
             im = tf.maximum(im-Ibk_0, 0)
             
-
-        # rotate
-        im = tf.image.rot90(im,3)
+        if real_mult:
+            # rotate
+            im = tf.image.rot90(im,3)
             
         im = tf.cast(im, dtype)
         im = im/float(2**bit_depth-1)/exposure
@@ -63,7 +67,8 @@ def load_multiplexed(num_patterns,
     
 
     return(im_stack_multiplexed)
-    
+
+  
 def load_img_stack(image_path, num_leds, num_patterns, r_channels, 
                    alpha, # pattern chosen ahead of time
                    bit_depth, 
@@ -139,6 +144,7 @@ def load_img_stack_real_data(image_path, num_patterns,
                              force_y_corner=None,
                              multiplexed_description='',
                              exposure=1,
+                             real_mult=False,
                              ):
     
     # randomly choose a patch
@@ -160,6 +166,7 @@ def load_img_stack_real_data(image_path, num_patterns,
                      dtype=tf.float32,
                      multiplexed_description = multiplexed_description,
                      exposure=exposure,
+                     real_mult=real_mult,
                      )
 
 

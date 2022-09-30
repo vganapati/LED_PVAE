@@ -941,8 +941,8 @@ if final_train:
     
 ### End of final train ###
 
-def load_batch(force_x_corner,
-               force_y_corner,
+def load_batch(force_x_corner=None,
+               force_y_corner=None,
                data_folder='training',
                ):
 
@@ -1204,6 +1204,7 @@ if visualize:
     if len(zernike_dist_vec)>0:
         zernike_sample = zernike_dist_vec[sample_ind].sample()
         zernike_sample = tf.expand_dims(tf.expand_dims(zernike_sample,1),1)
+        print('!!!')
         pupil_angle = tf.reduce_sum(zernike_mat*tf.cast(zernike_sample, tf.float64), axis=-1)
         pupil_new = pupil*tf.exp(1j*tf.cast(pupil_angle, tf.complex128))
         mask = np.ones_like(pupil)
@@ -1403,7 +1404,8 @@ if visualize:
                                          num_slices = num_slices,
                                          H_scalar = H_scalar,
                                          H_scalar_f = H_scalar_f,
-                                         visualize=True
+                                         visualize=True,
+                                         anneal_std=anneal_std,
                                          )
     
         

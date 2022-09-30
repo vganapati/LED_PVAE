@@ -429,7 +429,9 @@ def create_low_res_multislice(obj_stack,
     Psi0 = Psi0*H_scalar_f
     
     # Slice to dimensions of Np (downsample in real space) and filter by NA
-    Psi0 = tf.slice(Psi0, tf.cast(N_obj//2,tf.int32) - tf.cast(Np//2, tf.int32), Np)*P
+    # print(Psi0)
+    # print(P)
+    Psi0 = tf.slice(Psi0, tf.cast(N_obj//2,tf.int32) - tf.cast(Np//2, tf.int32), Np)*tf.cast(P, tf.complex64)
     
     psi0 = Ft(Psi0) #low resolution field
     

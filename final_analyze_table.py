@@ -8,66 +8,64 @@ Created on Mon Feb  7 18:31:00 2022
 import numpy as np
 from final_visualize_v2_helper import visualize_all, make_table
 
+#####################
 ### INPUTS ###
-input_data='dataset_MNIST_multislice_v2'#'dataset_foam_v2_pac1' #'dataset_cells_vae', 'dataset_foam_v2', 'dataset_MNIST_multislice_v2', 'dataset_foam_v2_pac1', 'dataset_foam_v2_pac2'
-save_tag='mnist'#'foam_pac1' # 'cells','foam2', 'mnist', 'foam_pac1', 'foam_pac2' # for full path, prepend '/Users/vganapa1/Dropbox/Github/AdaptiveFourierML/'
+input_data='dataset_MNIST_multislice_v2'#'dataset_foam_v2_pac1' 
+save_tag='mnist'#'foam_pac1' 
 single = False # single means that a single set of the SAME illumination patterns are used for all objects
 
 # items that can be varied
-noise_level_vec=[2,3,4,5]
+noise_level_vec=[2,3,4,5] # poisson noise multiplier is 10^noise_level
 num_examples_vec=[0,1,2,3,4] # neural network training examples is 10^num_examples
 num_patterns_vec=[1,2,3,4]
 compare_val_ind_vec=[0,1,2,3,4] # mse_recon, psnr_recon, ssim_recon_angle, ssim_recon_abs, ssim_recon_intensity
 
-# vary_vec = num_examples_vec
-# vary_name = 'num_examples_vec'
+# variable to vary in the table
+vary_vec = num_patterns_vec # num_examples_vec
+vary_name = 'num_patterns_vec' # 'num_examples_vec'
 
-vary_vec = num_patterns_vec
-vary_name = 'num_patterns_vec'
-
+# index of the vectors that is fixed if the variable is not varied
 noise_level_ind=1
 num_examples_ind=3
 num_patterns_ind=0
-
 compare_val_ind=1
+
+# Average over for text tables
+obj_ind_vec = [0,1,2,3,4,5,6,7,8,9]
+slice_ind_vec = [0,1] # [0] for single slice (2D) or [0,1] for 2 slices (3D)
+
+obj_ind_visualize = 0 # for graphics tables
+slice_ind_visualize = 0 # for graphics tables
+
+### Can be varied for image tables
+visualize_func = np.angle # np.abs or np.angle
+
+# np.angle
+vmin = -np.pi/2
+vmax = np.pi/2
+
+# # np.abs # uncomment to change the colorbar range for figures
+# vmin = 0
+# vmax = 1.4
+
+
+# change inputs to match what was used in training/optimization of dataset
+batch_size_opt = 5 # batch size in the iterative optimization
+num_iter = 10000 # number of iterations in the iterative optimization
+num_slices = 2
+t2_reg = 1e-2 # regularization lambda
+adam_learning_rate = 1e-3 # learning rate of the iterative solve
+dataset_type = 'training'
+batch_size = 10 # batch_size for the neural network training
+
+### END of INPUTS ###
+#####################
 
 if compare_val_ind==0:
     reduce_func = np.argmin
 else:
     reduce_func = np.argmax # np.min for metrics that minimize, np.max for metrics that maximize
 
-# Average over for text tables
-obj_ind_vec = [0] #[0,1,2,3,4,5,6,7,8,9]
-slice_ind_vec = [0,1] # [0] or [0,1]
-
-obj_ind_visualize = 0 # for graphics tables
-slice_ind_visualize = 0 # for graphics tables
-
-### Can be varied for image tables
-visualize_func = np.angle # np.abs, np.angle
-
-# # np.abs
-# vmin = 0
-# vmax = 1.4
-
-# np.angle
-vmin = -np.pi/2
-vmax = np.pi/2
-
-######## inputs that change with different input_data datasets
-batch_size_opt = 5 # batch size in the iterative optimization
-num_iter = 10000 # number of iterations in the iterative optimization
-num_slices = 2
-########
-
-t2_reg = 1e-2 # regularization lambda
-adam_learning_rate = 1e-3 # learning rate of the iterative solve
-dataset_type = 'training'
-batch_size = 10 # batch_size for the neural network training
-
-
-
-### END of INPUTS ###
 
 compare_value_mat_sum = None
 compare_visualize_mat = []

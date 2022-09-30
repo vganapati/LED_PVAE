@@ -18,8 +18,8 @@ SAVE_TAG_MULT='pnm1e'$NOISE_LEVEL'_single_dm01_p4' #single pattern
 else
 SAVE_TAG_MULT='pnm1e'$NOISE_LEVEL'_dm01_p4'
 fi
+echo $SAVE_PATH
 python FPM_VAE_v3.py --input_path $INPUT_PATH --save_path $SAVE_PATH -i 50000 -p $NUM_PATTERNS --td $NUM_EXAMPLES_FULL --nb 3 --nfm 10 --nfmm 1.5 --dp 0 --lr 1e-4 --norm 100 --se 4 --ks 4 --il 3 --pnm $NOISE_LEVEL_FULL -b 10 --klm 1.0 --klaf 1 --normal --train --visualize --en 0 --save_tag_mult $SAVE_TAG_MULT --final_train --vary_pupil
-echo output_$SAVE_TAG'_'$COUNTER
 COUNTER+=1
 done
 done
