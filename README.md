@@ -56,22 +56,16 @@ python SyntheticMNIST_multislice.py --save_path foam_v2_pac1 --td --tn_train 100
 Next, create the multiplexed illumination patterns and emulate the corresponding intensity images (i.e. measurements) for different noise levels (to get the matching illumination patterns for every noise level, do not run commands below in parallel, complete the first command before running the others):
 ```
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e4_dm01_p4 --pnm 1e4 --dm 0.1 -p 4
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e2_dm01_p4 --pnm 1e2 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e3_dm01_p4 --pnm 1e3 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e5_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
 ```
 
 Next, do the same as above, except fixing all illumination patterns to be the **same**:
 ```
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e4_single_dm01_p4 --pnm 1e4 --dm 0.1 -p 4 --single
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e2_single_dm01_p4 --pnm 1e2 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_single_dm01_p4
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e3_single_dm01_p4 --pnm 1e3 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_single_dm01_p4
-
 python create_multiplexed.py --input_path dataset_foam_v2_pac1 --save_tag pnm1e5_single_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_single_dm01_p4
 ```
 
@@ -87,31 +81,30 @@ Run the following to train the P-VAE on the dataset with the **same** illuminati
 
 Run the following to train the P-VAE on a training dataset of size 1 (object indices 0-9 of the complete dataset, using the illumination pattern from the different illuminations):
 ```
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 0 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 1 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 2 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 3 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 4 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 5 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 6 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 7 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 8 false
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 9 false
-
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 0 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 1 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 2 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 3 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 4 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 5 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 6 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 7 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 8 false
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 9 false
 ```
 
 Run the following to train the P-VAE on a training dataset of size 1 (object indices 0-9 of the complete dataset, using the illumination pattern from the case where they are all the same):
 ```
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 0 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 1 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 2 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 3 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 4 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 5 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 6 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 7 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 8 true
-./scripts/sweep_single_pattern.sh dataset_foam_v2_pac1 foam_pac1 9 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 0 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 1 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 2 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 3 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 4 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 5 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 6 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 7 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 8 true
+./scripts/sweep_single_example.sh dataset_foam_v2_pac1 foam_pac1 9 true
 ```
 
 
