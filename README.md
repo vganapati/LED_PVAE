@@ -114,7 +114,7 @@ Run the following for standard iterative optimization, using the illumination pa
 ./scripts/optimizer_sweep.sh dataset_foam_v2_pac1 10000 5 1e-3 true
 ```
 
-Analyze and visualize the results by creating $\LaTeX$ tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
+Analyze and visualize the results by creating LaTeX tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
 ```
 final_analyze_table.py
 ```
@@ -163,7 +163,7 @@ Run the following for standard iterative optimization, using the illumination pa
 ./scripts/optimizer_sweep.sh dataset_MNIST_multislice_v2 10000 5 1e-3 false
 ```
 
-Analyze and visualize the results by creating $\LaTeX$ tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
+Analyze and visualize the results by creating LaTeX tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
 ```
 final_analyze_table.py
 ```
