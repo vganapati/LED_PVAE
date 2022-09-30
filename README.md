@@ -160,7 +160,7 @@ Run the following to train the P-VAE on a training dataset of size 1 (object ind
 
 Run the following for standard iterative optimization, using the illumination patterns from the case where they are all different:
 ```
-./optimizer_sweep_single.sh dataset_MNIST_multislice_v2 10000 5 1e-3 false
+./scripts/optimizer_sweep.sh dataset_MNIST_multislice_v2 10000 5 1e-3 false
 ```
 
 Analyze and visualize the results by creating $\LaTeX$ tables, using the following script and trying different inputs. It is recommended to run the following using `spyder`.
