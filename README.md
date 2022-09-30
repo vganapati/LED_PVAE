@@ -128,16 +128,15 @@ plotter_helper_all_lowres.py
 
 First, create the dataset:
 ```
-python SyntheticMNIST_multislice.py --save_path MNIST_multislice_v2_test --td --tn_train 10000 --tn_test 0 --rad 3 --Nx 32 --Ny 32 --dti 0 --rmf 0.9 --ns 2 -f -5 
+python SyntheticMNIST_multislice.py --save_path MNIST_multislice_v2 --td --tn_train 10000 --tn_test 0 --rad 3 --Nx 32 --Ny 32 --dti 0 --rmf 0.9 --ns 2 -f -5 
 ```
 
 Next, create the multiplexed illumination patterns and emulate the corresponding intensity images (i.e. measurements) for different noise levels (to get the matching illumination patterns for every noise level, do not run commands below in parallel, complete the first command before running the others):
 ```
 python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e4_dm01_p4 --pnm 1e4 --dm 0.1 -p 4
-python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e2_dm01_p4 --pnm 1e2 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
-python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e3_dm01_p4 --pnm 1e3 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
-python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e5_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --single --save_tag_alpha pnm1e4_dm01_p4
-
+python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e2_dm01_p4 --pnm 1e2 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
+python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e3_dm01_p4 --pnm 1e3 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
+python create_multiplexed.py --input_path dataset_MNIST_multislice_v2 --save_tag pnm1e5_dm01_p4 --pnm 1e5 --dm 0.1 -p 4 --save_tag_alpha pnm1e4_dm01_p4
 ```
 
 Run the following to train the P-VAE on the dataset, sweeping through different dataset sizes, noise levels, and measurements per object:
