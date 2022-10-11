@@ -22,8 +22,14 @@ The main algorithm comprising the `LED_PVAE` is inspired by the variational auto
    
 # Installation <a name="Installation"></a>
 
-First create a `conda` environment:
+First, navigate to the folder where you want the repository and clone the repository:
 ```
+git clone https://github.com/vganapati/LED_PVAE.git
+```
+
+Create a `conda` environment:
+```
+cd LED_PVAE
 conda env create -f environment.yml
 conda activate LED
 ```
@@ -33,10 +39,7 @@ Once you're done with the above step, you need to use `pip install` to finish in
 pip install -r requirements.txt
 ```
 
-Finally, navigate to the folder where you want the repository and clone the repository:
-```
-git clone https://github.com/vganapati/LED_PVAE.git
-```
+
 
 And you're all set!
 
