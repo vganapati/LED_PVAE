@@ -178,7 +178,7 @@ plotter_helper_all_lowres.py
 
 ## Experimental Dataset <a name="experimental"></a>
 
-Download the experimental dataset as a `.zip` file from [figshare](https://figshare.com/s/635499acfdcdf0893750), uncompress and place into the `LED_PVAE` folder.
+Download the experimental dataset as a `.zip` file from [figshare](https://doi.org/10.6084/m9.figshare.21232088.v1), uncompress and place into the `LED_PVAE` folder.
 
 Run standard iterative optimization using the full stack of intensity images obtained by sequential, single LED illumination:
 ```
