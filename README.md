@@ -4,7 +4,7 @@
 ----
 ![Crates.io](https://img.shields.io/crates/l/Ap?color=black)
 
-The physics-informed variational autoencoder is a framework that uses self-supervised learning for reconstruction in sparse computational imaging. This repository `LED_PVAE` implements the physics-informed variational autoencoder for LED array microscopy, when the number of collected images is much less than the number of LEDs in the array.
+The physics-informed variational autoencoder is a framework that uses self-supervised learning for reconstruction in sparse computational imaging. This repository `LED_PVAE` implements the physics-informed variational autoencoder for LED array microscopy, when the number of collected images is much less than the number of LEDs in the array. The associated paper is available on [arXiv](https://doi.org/10.48550/arXiv.2210.16709) and was published in the [NeurIPS 2022 AI for Science](https://openreview.net/group?id=NeurIPS.cc/2022/Workshop/AI4Science#accept--poster-).
 
 # Overview
 The figure below shows the overview of the end-to-end `LED_PVAE` pipeline.
@@ -18,6 +18,7 @@ The main algorithm comprising the `LED_PVAE` is inspired by the variational auto
 2. [Synthetic Foam Dataset](#Foam)
 3. [Synthetic 3-Dimensional MNIST Dataset](#MNIST)
 4. [Experimental Dataset](#Experimental)
+5. [Citation](#Citation)
 
    
 # Installation <a name="Installation"></a>
@@ -205,4 +206,19 @@ data_figures.py
 Visualize the results, comparing the standard iterative with the physics-informed variational autoencoder with the following script:
 ```
 python compare_iterative.py --save_tag_recons _single_LED_iterative _p1_LED_iterative --save_path frog_blood_pvae --md _Dirichlet
+```
+
+## Citation
+
+If you find our work useful in your research, please cite:
+
+```
+@misc{olsen2022datadriven,
+      title={Data-Driven Computational Imaging for Scientific Discovery}, 
+      author={Andrew Olsen and Yolanda Hu and Vidya Ganapati},
+      year={2022},
+      eprint={2210.16709},
+      archivePrefix={arXiv},
+      primaryClass={eess.IV}
+}
 ```
